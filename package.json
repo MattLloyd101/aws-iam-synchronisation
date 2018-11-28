@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MattLloyd101/aws-iam-synchronization.git"
+    "url": "git+https://github.com/MattLloyd101/aws-iam-synchronisation.git"
   },
   "keywords": [
     "aws",
@@ -17,9 +17,9 @@
   "author": "Matthew Lloyd",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MattLloyd101/aws-iam-synchronization/issues"
+    "url": "https://github.com/MattLloyd101/aws-iam-synchronisation/issues"
   },
-  "homepage": "https://github.com/MattLloyd101/aws-iam-synchronization#readme",
+  "homepage": "https://github.com/MattLloyd101/aws-iam-synchronisation#readme",
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
