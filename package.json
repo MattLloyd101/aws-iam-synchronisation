@@ -1,0 +1,35 @@
+{
+  "name": "aws-iam-synchronization",
+  "version": "1.0.0",
+  "description": "A library that synchronises IAM groups, policies and roles.",
+  "main": "src/AwsIAMSynchronisation.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MattLloyd101/aws-iam-synchronization.git"
+  },
+  "keywords": [
+    "aws",
+    "iam"
+  ],
+  "author": "Matthew Lloyd",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MattLloyd101/aws-iam-synchronization/issues"
+  },
+  "homepage": "https://github.com/MattLloyd101/aws-iam-synchronization#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "sinon": "^7.1.1",
+    "sinon-chai": "^3.3.0"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.365.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
