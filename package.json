@@ -24,12 +24,13 @@
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
     "mock-require": "^3.0.2",
-    "require-intercept": "^1.0.3",
+    "require-intercept": "^1.0.4",
     "sinon": "^7.1.1",
     "sinon-chai": "^3.3.0"
   },
   "dependencies": {
-    "aws-sdk": "^2.365.0"
+    "aws-sdk": "^2.365.0",
+    "deep-diff": "^1.0.2"
   },
   "publishConfig": {
     "access": "public"

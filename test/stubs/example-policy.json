@@ -1,0 +1,24 @@
+{
+    "PolicyName": "MyExamplePolicy-A",
+    "Description": "An example policy document",
+    "Path": "/path",
+    "PolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "ec2:AttachVolume",
+                    "ec2:DetachVolume"
+                ],
+                "Resource": [
+                    "arn:aws:ec2:*:*:volume/*",
+                    "arn:aws:ec2:*:*:instance/*"
+                ],
+                "Condition": {
+                    "ArnEquals": {"ec2:SourceInstanceARN": "arn:aws:ec2:*:*:instance/<INSTANCE-ID>"}
+                }
+            }
+        ]
+    }
+}
