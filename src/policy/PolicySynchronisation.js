@@ -1,7 +1,15 @@
 "use strict";
 
-const PolicyClassifier = require('./PolicyClassifier');
 const {promisify} = require('util');
+
+const PolicyClassifier = require('./PolicyClassifier');
+
+const NoOperation = require('./operations/NoOperation');
+const CreatePolicyOperation = require('./operations/CreatePolicyOperation');
+const UpdatePolicyOperation = require('./operations/UpdatePolicyOperation');
+const DestructiveUpdatePolicyOperation = require('./operations/DestructiveUpdatePolicyOperation');
+const RemovePolicyOperation = require('./operations/RemovePolicyOperation');
+const RemovePolicyVersionOperation = require('./operations/RemovePolicyVersionOperation');
 
 module.exports = class PolicySynchronisation {
 
@@ -10,61 +18,62 @@ module.exports = class PolicySynchronisation {
         // if there's a policy, and the policy has a PolicyDocument that's not a string...
         // NOTE: use of deliberate weakening.
         if(policy && policy.PolicyDocument != null && !(typeof policy.PolicyDocument === 'string' || policy.PolicyDocument instanceof String)) {
+            policy.PolicyDocumentJson = policy.PolicyDocument;
             policy.PolicyDocument = JSON.stringify(policy.PolicyDocument);
         }
         return policy;
     }
 
-    static rebuildPolicyDoc(policy, policyVersion) {
+    static rebuildPolicyDoc({ Policy: {Arn, PolicyName, Description, Path}}, { PolicyVersion: { Document } }) {
         return {
-            "Arn": policy.Policy.Arn,
-            "PolicyName": policy.Policy.PolicyName,
-            "Description": policy.Policy.Description,
-            "Path": policy.Policy.Path,
-            "PolicyDocument": policyVersion.PolicyVersion.Document
+            "Arn": Arn,
+            "PolicyName": PolicyName,
+            "Description": Description,
+            "Path": Path,
+            "PolicyDocument": Document
         };
     }
 
-    constructor(iam, targetPolicy) {
+    constructor(iam, configuration, policy) {
         this.iam = iam;
-        this.iam.createPolicyAsync = promisify(this.iam.createPolicy);
-        this.iam.getPolicyAsync = promisify(this.iam.getPolicy);
-        this.iam.getPolicyVersionAsync = promisify(this.iam.getPolicyVersion);
-        this.iam.createPolicyVersionAsync = promisify(this.iam.createPolicyVersion);
-        this.targetPolicy = PolicySynchronisation.preparePolicy(Object.assign({}, targetPolicy));
+        this.configuration = configuration;
+        this.targetPolicy = PolicySynchronisation.preparePolicy(Object.assign({}, policy));
     }
 
-    async updateOrCreate() {
-        if(this.targetPolicy.Arn) {
-            return await this.update();
-        } else {
-            return await this.create();
-        }
-    }
-
-    async create() {
-        return await this.iam.createPolicyAsync(this.targetPolicy);
+    async findUnusedPolicies() {
+        const {Policies} = await this.iam.listPoliciesAsync({ "Scope": "Local" });
+        return Policies.filter(_ => _.AttachmentCount === 0 && _.PermissionsBoundaryUsageCount === 0);
     }
 
     async getPolicy(arn) {
-        return await this.iam.getPolicyAsync({ "Arn": arn });
+        return await this.iam.getPolicyAsync({ "PolicyArn": arn });
     }
 
     async getPolicyVersion(arn, versionId) {
         return await this.iam.getPolicyVersionAsync({ "PolicyArn": arn, "VersionId": versionId });
     }
 
-    async performUpdate() {
-        const params = {
-            "Arn": this.targetPolicy.Arn,
-            "PolicyDocument": this.targetPolicy.PolicyDocument,
-            "SetAsDefault": true
-        };
-        return await this.iam.createPolicyVersionAsync(params);
+    async removePolicy(policy) {
+        const {Arn} = policy;
+        
+        const {Versions} = await this.iam.listPolicyVersionsAsync({PolicyArn:Arn});
+        const allNonDefaultVersions = Versions.filter(version => !version.IsDefaultVersion);
+
+        const removeVersionOperations = allNonDefaultVersions.map(({VersionId}) => new RemovePolicyVersionOperation(this.iam, this.configuration, Arn, VersionId));
+        const removeOperation = new RemovePolicyOperation(this.iam, this.configuration, Arn);
+        return removeVersionOperations.concat([removeOperation]);
     }
 
-    async performDestructiveUpdate() {
-        console.log("Destructive Update not implemented.");
+    create() {
+        return [ new CreatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
+    }
+
+    async updateOrCreate() {
+        if(this.targetPolicy.Arn) {
+            return await this.update();
+        } else {
+            return this.create();
+        }
     }
 
     async update() {
@@ -76,9 +85,11 @@ module.exports = class PolicySynchronisation {
         
         switch(policyClassifier.classify()) {
             case PolicyClassifier.UPDATE:
-                return await this.performUpdate();
+                return [ new UpdatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
             case PolicyClassifier.DESTRUCTIVE_UPDATE:
-                return await this.performDestructiveUpdate();
+                return [ new DestructiveUpdatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
+            case PolicyClassifier.NONE:
+                return [ new NoOperation(arn) ];
         }
     }
 

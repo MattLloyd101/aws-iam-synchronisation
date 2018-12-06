@@ -1,0 +1,40 @@
+{
+  "PolicyName": "S3UserAccessToHomeDirectory2",
+  "Description": "Allow users to access their home directory in servus-home-bucket",
+  "Path": "/servus/S3/",
+  "PolicyDocument": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:ListAllMyBuckets",
+          "s3:GetBucketLocation"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": "s3:ListBucket",
+        "Resource": "arn:aws:s3:::servus-home-bucket",
+        "Condition": {
+          "StringLike": {
+            "s3:prefix": [
+              "",
+              "home/",
+              "home/${aws:username}/*"
+            ]
+          }
+        }
+      },
+      {
+        "Effect": "Allow",
+        "Action": "s3:*",
+        "Resource": [
+          "arn:aws:s3:::servus-home-bucket/home/${aws:username}",
+          "arn:aws:s3:::servus-home-bucket/home/${aws:username}/*"
+        ]
+      }
+    ]
+  }
+}

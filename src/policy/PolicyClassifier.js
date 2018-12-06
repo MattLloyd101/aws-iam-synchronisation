@@ -28,7 +28,9 @@ module.exports = class PolicyClassifier {
             return PolicyClassifier.DESTRUCTIVE_UPDATE;
         }
 
-        const diffPolicyDocument = this.localPolicy.PolicyDocument != this.remotePolicy.PolicyDocument;
+        const decodedPolicyDocument = decodeURIComponent(this.remotePolicy.PolicyDocument);
+        const diffPolicyDocument = this.localPolicy.PolicyDocument != decodedPolicyDocument;
+
         if(diffPolicyDocument) {
             return PolicyClassifier.UPDATE;
         }
