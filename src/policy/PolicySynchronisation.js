@@ -1,12 +1,14 @@
 "use strict";
 
+const PolicySynchronizer = require('PolicySynchronizer')
+
 module.exports = class PolicySynchronisation {
     
     constructor(iam, configuration) {
         this.iam = iam;
         this.configuration = configuration;
     }
-    
+
     async gatherPolcyOperations(policyPath) {
         console.log(`> Gathering Policies from path(${policyPath})`);
         const unusedPolcyOperations = this.configuration.cleanupUnusedPolicies ? await this.cleanupUnusedPolicies() : [];
@@ -34,16 +36,16 @@ module.exports = class PolicySynchronisation {
         const policyString = await fs.readFileAsync(policyFilePath, 'utf8');
         const policyJson = JSON.parse(policyString);
         policyJson.FilePath = policyFilePath;
-        const policySynchroniser = new PolicySynchronisation(this.iam, this.configuration, policyJson);
+        const policySynchronizer = new PolicySynchronizer(this.iam, this.configuration, policyJson);
 
-        return await policySynchroniser.updateOrCreate();
+        return await policySynchronizer.updateOrCreate();
     }
 
     async cleanupUnusedPolicies() {
-        const policySynchroniser = new PolicySynchronisation(this.iam, this.configuration);
-        const policies = await policySynchroniser.findUnusedPolicies();
+        const policySynchronizer = new PolicySynchronizer(this.iam, this.configuration);
+        const policies = await policySynchronizer.findUnusedPolicies();
 
-        const allOperations = await Promise.all(policies.map(async (policy) => { return await policySynchroniser.removePolicy(policy); }));
+        const allOperations = await Promise.all(policies.map(async (policy) => { return await policySynchronizer.removePolicy(policy); }));
         return [].concat.apply([], allOperations);
     }
 
