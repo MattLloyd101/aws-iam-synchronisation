@@ -13,7 +13,8 @@ module.exports = class AwsIAMSynchronisation {
             "policyPath": "/policy/**/**",
             "policyExtention": "json",
             "jsonSpacing": 2,
-            "cleanupUnusedPolicies": false
+            "cleanupUnusedPolicies": false,
+            "cleanupUnusedGroups": false
         };
     }
 

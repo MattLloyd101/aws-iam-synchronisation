@@ -17,7 +17,7 @@ module.exports = class PolicySynchronisation {
 
     async gatherPolicyOperations(policyPath) {
         console.log(`> Gathering Policies from path(${policyPath})`);
-        const unusedPolcyOperations = this.configuration.cleanupUnusedPolicies ? await this.cleanupUnusedPolicies() : [];
+        const unusedPolicyOperations = this.configuration.cleanupUnusedPolicies ? await this.cleanupUnusedPolicies() : [];
 
         // list all policies in the path
         const globPath = `${policyPath}.${this.configuration.policyExtention}`;
@@ -25,7 +25,7 @@ module.exports = class PolicySynchronisation {
         
         const syncOperations = await Promise.all(policyFiles.map(async (policyFilePath) => { return await this.syncPolicy(policyFilePath) }));
         const flattenedSyncOperations = [].concat.apply([], syncOperations);
-        return this.tidyPolicyOperations(unusedPolcyOperations, flattenedSyncOperations);
+        return this.tidyPolicyOperations(unusedPolicyOperations, flattenedSyncOperations);
     }
 
     tidyPolicyOperations(unusedPolicyOperations, flattenedSyncOperations) {
