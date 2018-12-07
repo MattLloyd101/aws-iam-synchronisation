@@ -16,6 +16,8 @@ module.exports = class RemovePolicyVersionOperation {
     async run() {
         const {Arn, VersionId} = this;
         console.log(`        - Removing Policy Version Arn(${Arn})`);
+        if(this.configuration.isDryRun) return;
+
         return await this.iam.deletePolicyVersionAsync({PolicyArn: Arn, VersionId});
     }
 

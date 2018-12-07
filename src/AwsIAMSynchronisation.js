@@ -54,7 +54,6 @@ module.exports = class AwsIAMSynchronisation {
         }
         const fullPolicyPath = this.configuration.basePath + this.configuration.policyPath;
         const policyOperations = await this.gatherPolcyOperations(fullPolicyPath);
-
         
         policyOperations.map((_) => {_.run()});
     }

@@ -1,98 +1,50 @@
 "use strict";
 
-const {promisify} = require('util');
-
-const PolicyClassifier = require('./PolicyClassifier');
-
-const NoOpPolicyOperation = require('./operations/NoOpPolicyOperation');
-const CreatePolicyOperation = require('./operations/CreatePolicyOperation');
-const UpdatePolicyOperation = require('./operations/UpdatePolicyOperation');
-const DestructiveUpdatePolicyOperation = require('./operations/DestructiveUpdatePolicyOperation');
-const RemovePolicyOperation = require('./operations/RemovePolicyOperation');
-const RemovePolicyVersionOperation = require('./operations/RemovePolicyVersionOperation');
-
 module.exports = class PolicySynchronisation {
-
-    static preparePolicy(policy) {
-
-        // if there's a policy, and the policy has a PolicyDocument that's not a string...
-        // NOTE: use of deliberate weakening.
-        if(policy && policy.PolicyDocument != null && !(typeof policy.PolicyDocument === 'string' || policy.PolicyDocument instanceof String)) {
-            policy.PolicyDocumentJson = policy.PolicyDocument;
-            policy.PolicyDocument = JSON.stringify(policy.PolicyDocument);
-        }
-        return policy;
-    }
-
-    static rebuildPolicyDoc({ Policy: {Arn, PolicyName, Description, Path}}, { PolicyVersion: { Document } }) {
-        const decodedPolicyDocument = decodeURIComponent(Document);
-        return {
-            "Arn": Arn,
-            "PolicyName": PolicyName,
-            "Description": Description,
-            "Path": Path,
-            "PolicyDocument": decodedPolicyDocument
-        };
-    }
-
-    constructor(iam, configuration, policy) {
+    
+    constructor(iam, configuration) {
         this.iam = iam;
         this.configuration = configuration;
-        this.targetPolicy = PolicySynchronisation.preparePolicy(Object.assign({}, policy));
     }
+    
+    async gatherPolcyOperations(policyPath) {
+        console.log(`> Gathering Policies from path(${policyPath})`);
+        const unusedPolcyOperations = this.configuration.cleanupUnusedPolicies ? await this.cleanupUnusedPolicies() : [];
 
-    async findUnusedPolicies() {
-        const {Policies} = await this.iam.listPoliciesAsync({ "Scope": "Local" });
-        return Policies.filter(_ => _.AttachmentCount === 0 && _.PermissionsBoundaryUsageCount === 0);
-    }
-
-    async getPolicy(arn) {
-        return await this.iam.getPolicyAsync({ "PolicyArn": arn });
-    }
-
-    async getPolicyVersion(arn, versionId) {
-        return await this.iam.getPolicyVersionAsync({ "PolicyArn": arn, "VersionId": versionId });
-    }
-
-    async removePolicy(policy) {
-        const {Arn} = policy;
+        // list all policies in the path
+        const globPath = `${policyPath}.${this.configuration.policyExtention}`;
+        const policyFiles = await glob(globPath, this.configuration.globOptions);
         
-        const {Versions} = await this.iam.listPolicyVersionsAsync({PolicyArn:Arn});
-        const allNonDefaultVersions = Versions.filter(version => !version.IsDefaultVersion);
-
-        const removeVersionOperations = allNonDefaultVersions.map(({VersionId}) => new RemovePolicyVersionOperation(this.iam, this.configuration, Arn, VersionId));
-        const removeOperation = new RemovePolicyOperation(this.iam, this.configuration, Arn);
-        return removeVersionOperations.concat([removeOperation]);
+        const syncOperations = await Promise.all(policyFiles.map(async (policyFilePath) => { return await this.syncPolicy(policyFilePath) }));
+        const flattenedSyncOperations = [].concat.apply([], syncOperations);
+        return this.tidyPolicyOperations(unusedPolcyOperations, flattenedSyncOperations);
     }
 
-    create() {
-        return [ new CreatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
+    tidyPolicyOperations(unusedPolicyOperations, flattenedSyncOperations) {
+        const affectedArns = flattenedSyncOperations.map(_ => _.Arn);
+        // remove unusedPolcyOperations that are specified in flattenedSyncOperations
+        const strippedUnusedPolicyOperations = unusedPolicyOperations.filter((op1) => {
+            return affectedArns.indexOf(op1.Arn) === -1;
+        });
+
+        return strippedUnusedPolicyOperations.concat(flattenedSyncOperations);
     }
 
-    async updateOrCreate() {
-        if(this.targetPolicy.Arn) {
-            return await this.update();
-        } else {
-            return this.create();
-        }
+    async syncPolicy(policyFilePath) {
+        const policyString = await fs.readFileAsync(policyFilePath, 'utf8');
+        const policyJson = JSON.parse(policyString);
+        policyJson.FilePath = policyFilePath;
+        const policySynchroniser = new PolicySynchronisation(this.iam, this.configuration, policyJson);
+
+        return await policySynchroniser.updateOrCreate();
     }
 
-    async update() {
-        const arn = this.targetPolicy.Arn;
-        const remotePolicy = await this.getPolicy(arn);
-        const policyVersion = await this.getPolicyVersion(arn, remotePolicy.Policy.DefaultVersionId);
-        const rebuiltPolicyDoc = PolicySynchronisation.rebuildPolicyDoc(remotePolicy, policyVersion);
-        const policyClassifier = new PolicyClassifier(this.targetPolicy, rebuiltPolicyDoc);
-        
-        switch(policyClassifier.classify()) {
-            case PolicyClassifier.UPDATE:
-                return [ new UpdatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
-            case PolicyClassifier.DESTRUCTIVE_UPDATE:
-                return [ new DestructiveUpdatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
-            default:
-            case PolicyClassifier.NONE:
-                return [ new NoOpPolicyOperation(arn) ];
-        }
+    async cleanupUnusedPolicies() {
+        const policySynchroniser = new PolicySynchronisation(this.iam, this.configuration);
+        const policies = await policySynchroniser.findUnusedPolicies();
+
+        const allOperations = await Promise.all(policies.map(async (policy) => { return await policySynchroniser.removePolicy(policy); }));
+        return [].concat.apply([], allOperations);
     }
 
 }

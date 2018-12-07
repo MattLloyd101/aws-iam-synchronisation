@@ -15,19 +15,22 @@ module.exports = class UpdatePolicyOperation {
         this.Arn = this.targetPolicy.Arn;
     }
 
+
     async run() {
-        const {FilePath, PolicyName, Path, Description, PolicyDocument, PolicyDocumentJson} = this.targetPolicy;
+        const {FilePath, Arn, PolicyName, Path, Description, PolicyDocument, PolicyDocumentJson} = this.targetPolicy;
         console.log(`    - Updating Policy ${PolicyName} with ARN(${Arn})`);
+        if(this.configuration.isDryRun) return;
 
         const params = {
             "PolicyArn": Arn,
             PolicyDocument,
             "SetAsDefault": true
         };
-        const { Policy: {Arn} } = await this.iam.createPolicyVersionAsync(params);
+        const { PolicyVersion: {VersionId} } = await this.iam.createPolicyVersionAsync(params);
         
         const updatedPolicy = {
             Arn,
+            VersionId,
             PolicyName,
             Description,
             Path,

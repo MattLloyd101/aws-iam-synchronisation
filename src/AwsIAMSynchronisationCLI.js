@@ -4,7 +4,8 @@ const AwsIAMSynchronisation = require('./AwsIAMSynchronisation');
 
 const synchroniser = new AwsIAMSynchronisation({
     "basePath": "example",
-    "cleanupUnusedPolicies": true
+    "cleanupUnusedPolicies": true,
+    "isDryRun": false
 });
 
 async function runSynchronisation() {

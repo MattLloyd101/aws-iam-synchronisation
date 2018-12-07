@@ -22,7 +22,7 @@
   "homepage": "https://github.com/MattLloyd101/aws-iam-synchronisation#readme",
   "bin": {
     "aws-iam-synchronisation": "AwsIAMSynchronisationCLI.js"
-  },
+  },  
   "devDependencies": {
     "chai": "^4.2.0",
     "mocha": "^5.2.0",
