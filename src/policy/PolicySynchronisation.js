@@ -4,7 +4,7 @@ const {promisify} = require('util');
 
 const PolicyClassifier = require('./PolicyClassifier');
 
-const NoOperation = require('./operations/NoOperation');
+const NoOpPolicyOperation = require('./operations/NoOpPolicyOperation');
 const CreatePolicyOperation = require('./operations/CreatePolicyOperation');
 const UpdatePolicyOperation = require('./operations/UpdatePolicyOperation');
 const DestructiveUpdatePolicyOperation = require('./operations/DestructiveUpdatePolicyOperation');
@@ -25,12 +25,13 @@ module.exports = class PolicySynchronisation {
     }
 
     static rebuildPolicyDoc({ Policy: {Arn, PolicyName, Description, Path}}, { PolicyVersion: { Document } }) {
+        const decodedPolicyDocument = decodeURIComponent(Document);
         return {
             "Arn": Arn,
             "PolicyName": PolicyName,
             "Description": Description,
             "Path": Path,
-            "PolicyDocument": Document
+            "PolicyDocument": decodedPolicyDocument
         };
     }
 
@@ -88,8 +89,9 @@ module.exports = class PolicySynchronisation {
                 return [ new UpdatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
             case PolicyClassifier.DESTRUCTIVE_UPDATE:
                 return [ new DestructiveUpdatePolicyOperation(this.iam, this.configuration, this.targetPolicy) ];
+            default:
             case PolicyClassifier.NONE:
-                return [ new NoOperation(arn) ];
+                return [ new NoOpPolicyOperation(arn) ];
         }
     }
 

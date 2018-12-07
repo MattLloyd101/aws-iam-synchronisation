@@ -1,9 +1,9 @@
 "use strict";
 
-module.exports = class RemovePolicyOperation {
+module.exports = class RemovePolicyVersionOperation {
 
     get type() {
-        return "REMOVE_POLICY";
+        return "REMOVE_POLICY_VERSION";
     }
 
     constructor(iam, configuration, Arn, VersionId) {

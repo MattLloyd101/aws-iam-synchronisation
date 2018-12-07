@@ -5,7 +5,7 @@ const fs = require('fs');
 module.exports = class UpdatePolicyOperation {
 
     get type() {
-        return "UPDATE";
+        return "UPDATE_POLICY";
     }
 
     constructor(iam, configuration, targetPolicy) {
