@@ -1,4 +1,6 @@
 {
+  "Arn": "arn:aws:iam::710520375036:policy/iam/BlockMostAccessUnlessSignedInWithMFA",
+  "VersionId": "v7",
   "PolicyName": "BlockMostAccessUnlessSignedInWithMFA",
   "Description": "Blocks out most access unless the user is signed in with MFA Access",
   "Path": "/iam/",
