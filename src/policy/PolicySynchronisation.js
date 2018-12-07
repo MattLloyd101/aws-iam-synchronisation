@@ -1,6 +1,12 @@
 "use strict";
 
-const PolicySynchronizer = require('PolicySynchronizer')
+const {promisify} = require('util');
+const fs = require('fs');
+fs.readFileAsync = promisify(fs.readFile);
+fs.writeFileAsync = promisify(fs.writeFile);
+const glob = promisify(require('glob'));
+
+const PolicySynchronizer = require('./PolicySynchronizer');
 
 module.exports = class PolicySynchronisation {
     
@@ -9,7 +15,7 @@ module.exports = class PolicySynchronisation {
         this.configuration = configuration;
     }
 
-    async gatherPolcyOperations(policyPath) {
+    async gatherPolicyOperations(policyPath) {
         console.log(`> Gathering Policies from path(${policyPath})`);
         const unusedPolcyOperations = this.configuration.cleanupUnusedPolicies ? await this.cleanupUnusedPolicies() : [];
 
