@@ -1,7 +1,0 @@
-{
-    "GroupName": "ExampleGroupName",
-    "Path": "/",
-    "Policies": [
-        "arn:aws:iam::aws:policy/ReadOnlyAccess"
-    ]
-}

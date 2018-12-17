@@ -32,6 +32,7 @@ module.exports = class AwsIAMSynchronisation {
         iam.getGroupAsync = promisify(iam.getGroup);
         iam.listGroupsAsync = promisify(iam.listGroups);
         iam.createGroupAsync = promisify(iam.createGroup);
+        iam.updateGroupAsync = promisify(iam.updateGroup);
         iam.deleteGroupAsync = promisify(iam.deleteGroup);
         iam.attachGroupPolicyAsync = promisify(iam.attachGroupPolicy);
         iam.detachGroupPolicyAsync = promisify(iam.detachGroupPolicy);

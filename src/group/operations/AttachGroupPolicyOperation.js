@@ -14,7 +14,15 @@ module.exports = class AttachGroupPolicyOperation {
     }
 
     async run() {
-        console.log(`    [GROUP ] Attaching Policy with ARN(${this.Arn}) to Group with Name(${this.groupName})`)
+        console.log(`    [GROUP] Attaching Policy with ARN(${this.policyArn}) to Group with Name(${this.groupName})`)
+        if(this.configuration.isDryRun) return;
+
+        const params = {
+          GroupName: this.groupName,
+          PolicyArn: this.policyArn
+        };
+
+        await this.iam.attachGroupPolicyAsync(params);
     }
 
     async rollback() {

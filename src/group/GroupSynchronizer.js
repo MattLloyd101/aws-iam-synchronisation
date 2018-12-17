@@ -17,22 +17,37 @@ module.exports = class GroupSynchronizer {
         if(this.targetGroup.Arn) {
             return await this.update();
         } else {
-            return this.create();
+            return await this.create();
         }
     }
 
     async findUnusedGroups() {
         const {Groups} = await this.iam.listGroupsAsync({});
-        return Groups.filter(_ => _.AttachmentCount === 0 && _.PermissionsBoundaryUsageCount === 0);
+        // TODO: Need to look up each group and filter by their user count.
+        console.log(Groups);
+        return Groups.filter(_ => _.Users.length() === 0);
     }
 
     async update() {
-        const {GroupName, Path} = this.targetGroup;
-        const {Group} = this.iam.getGroupAsync({GroupName});
+        const {GroupName, Path, NewGroupName} = this.targetGroup;
+
+        let Group;
+
+        try {
+            let response = await this.iam.getGroupAsync({GroupName});
+            Group = response.Group;
+        } catch(e) {
+            if (e.code === "NoSuchEntity") {
+                e.message = `${e.message} If you are trying to rename your group, keep GroupName the same, but add a new key NewGroupName instead.`;
+            }
+            throw e;
+        }
 
         let updateOperation = [];
-        if(Group.GroupName !== GroupName && Group.Path !== Path) {
-            updateOperation = [new UpdateGroupOperation(this.iam, this.configuration, this.targetGroup)];
+        
+        
+        if(NewGroupName !== undefined || Group.Path !== Path) {
+            updateOperation = [new UpdateGroupOperation(this.iam, this.configuration, this.targetGroup, Group.GroupName)];
         }
 
         const attachDetachOperations = await this.updatePolicies();

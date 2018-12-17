@@ -14,7 +14,15 @@ module.exports = class DetatchGroupPolicyOperation {
     }
 
     async run() {
-        console.log(`    [GROUP ] Detatching Policy with ARN(${this.Arn}) from Group with Name(${this.groupName})`)
+        console.log(`    [GROUP] Detatching Policy with ARN(${this.policyArn}) from Group with Name(${this.groupName})`)
+        if(this.configuration.isDryRun) return;
+
+        const params = {
+          GroupName: this.groupName,
+          PolicyArn: this.policyArn
+        };
+
+        await this.iam.detachGroupPolicyAsync(params);
     }
 
     async rollback() {
