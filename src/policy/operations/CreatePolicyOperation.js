@@ -17,7 +17,7 @@ module.exports = class CreatePolicyOperation {
     async run() {
         const {FilePath, PolicyName, Path, Description, PolicyDocument, PolicyDocumentJson} = this.newPolicy;
 
-        console.log(`    - Creating Policy ${PolicyName}`);
+        console.log(`    [POLICY] Creating Policy ${PolicyName}`);
         if(this.configuration.isDryRun) return;
 
         const { Policy: {Arn} } = await this.iam.createPolicyAsync({

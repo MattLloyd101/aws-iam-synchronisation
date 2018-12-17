@@ -1,7 +1,5 @@
 "use strict";
 
-const {promisify} = require('util');
-
 const PolicyClassifier = require('./PolicyClassifier');
 
 const NoOpPolicyOperation = require('./operations/NoOpPolicyOperation');
@@ -56,6 +54,9 @@ module.exports = class PolicySynchronizer {
 
     async removePolicy(policy) {
         const {Arn} = policy;
+
+        // TODO: What if this policy is referenced in a Group or a Role.
+        // Probably need a Fail Safe Remove operation.
         
         const {Versions} = await this.iam.listPolicyVersionsAsync({PolicyArn:Arn});
         const allNonDefaultVersions = Versions.filter(version => !version.IsDefaultVersion);

@@ -18,7 +18,7 @@ module.exports = class UpdatePolicyOperation {
 
     async run() {
         const {FilePath, Arn, PolicyName, Path, Description, PolicyDocument, PolicyDocumentJson} = this.targetPolicy;
-        console.log(`    - Updating Policy ${PolicyName} with ARN(${Arn})`);
+        console.log(`    [POLICY] Updating Policy ${PolicyName} with ARN(${Arn})`);
         if(this.configuration.isDryRun) return;
 
         const params = {

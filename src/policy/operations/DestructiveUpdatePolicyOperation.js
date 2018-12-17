@@ -14,7 +14,7 @@ module.exports = class DestructiveUpdatePolicyOperation {
     }
 
     async run() {
-        console.log(`    - Destructive Update not implemented. Policy with ARN(${this.Arn}) was not modified`);
+        console.log(`    [POLICY] Destructive Update not implemented. Policy with ARN(${this.Arn}) was not modified`);
         return;
     }
 

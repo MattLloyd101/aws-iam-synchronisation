@@ -1,11 +1,18 @@
 "use strict";
 
+const {promisify} = require('util');
+const fs = require('fs');
+fs.readFileAsync = promisify(fs.readFile);
+fs.writeFileAsync = promisify(fs.writeFile);
+const glob = promisify(require('glob'));
+
+const GroupSynchronizer = require('./GroupSynchronizer');
+
 module.exports = class GroupSynchronisation {
     
-    constructor(iam, configuration, group) {
+    constructor(iam, configuration) {
         this.iam = iam;
         this.configuration = configuration;
-        this.targetGroupgroup = group;
     }
 
     async gatherGroupOperations(groupPath) {
@@ -13,7 +20,7 @@ module.exports = class GroupSynchronisation {
         const unusedPolcyOperations = this.configuration.cleanupUnusedGroups ? await this.cleanupUnusedGroups() : [];
 
         // list all groups in the path
-        const globPath = `${groupPath}.${this.configuration.groupExtention}`;
+        const globPath = `${groupPath}.${this.configuration.extention}`;
         const groupFiles = await glob(globPath, this.configuration.globOptions);
         
         const syncOperations = await Promise.all(groupFiles.map(async (groupFilePath) => { return await this.syncGroup(groupFilePath) }));

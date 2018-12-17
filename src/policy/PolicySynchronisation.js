@@ -20,7 +20,7 @@ module.exports = class PolicySynchronisation {
         const unusedPolicyOperations = this.configuration.cleanupUnusedPolicies ? await this.cleanupUnusedPolicies() : [];
 
         // list all policies in the path
-        const globPath = `${policyPath}.${this.configuration.policyExtention}`;
+        const globPath = `${policyPath}.${this.configuration.extention}`;
         const policyFiles = await glob(globPath, this.configuration.globOptions);
         
         const syncOperations = await Promise.all(policyFiles.map(async (policyFilePath) => { return await this.syncPolicy(policyFilePath) }));

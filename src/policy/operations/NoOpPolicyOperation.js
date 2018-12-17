@@ -11,7 +11,7 @@ module.exports = class NoOpPolicyOperation {
     }
 
     async run() {
-        console.log(`    - Policy with ARN(${this.Arn}) is identical. Not modified.`)
+        console.log(`    [POLICY] Policy with ARN(${this.Arn}) is identical. Not modified.`)
     }
 
     async rollback() {

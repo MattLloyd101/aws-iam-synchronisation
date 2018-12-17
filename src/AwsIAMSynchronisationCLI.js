@@ -5,6 +5,7 @@ const AwsIAMSynchronisation = require('./AwsIAMSynchronisation');
 const synchroniser = new AwsIAMSynchronisation({
     "basePath": "example",
     "cleanupUnusedPolicies": true,
+    "cleanupUnusedGroups": true,
     "isDryRun": false
 });
 
